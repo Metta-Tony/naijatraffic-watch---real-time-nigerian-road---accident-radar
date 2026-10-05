@@ -42,6 +42,7 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({
   );
   const [showIncidentPins, setShowIncidentPins] = useState(true);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const cityCorridors = corridors.filter(c => c.city === city);
   const cityIncidents = incidents.filter(i => i.city === city);
@@ -132,15 +133,15 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({
       </div>
 
       {/* Main Interactive Map Canvas */}
-      <div className="relative w-full aspect-4/3 sm:aspect-16/9 max-h-[460px] bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+      <div className={`relative w-full ${isExpanded ? 'aspect-[16/9] max-h-[560px]' : 'aspect-4/3 sm:aspect-16/9 max-h-[460px]'} bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl`}>
         {/* Subtle grid pattern background */}
         <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]" />
 
         {/* City Geography & Waterway representations */}
         <svg 
-          viewBox="0 0 540 420" 
+          viewBox={isExpanded ? '0 0 700 460' : '0 0 540 420'} 
           className="w-full h-full object-cover transition-transform duration-300"
-          style={{ transform: `scale(${zoomLevel})` }}
+          style={{ transform: `scale(${isExpanded ? Math.max(zoomLevel - 0.15, 0.9) : zoomLevel})` }}
         >
           <defs>
             <linearGradient id="lagoonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -341,14 +342,21 @@ export const TrafficMap: React.FC<TrafficMapProps> = ({
         {/* Map Zoom Controls */}
         <div className="absolute bottom-3 right-3 flex flex-col gap-1">
           <button
-            onClick={() => setZoomLevel(prev => Math.min(prev + 0.25, 2))}
+            onClick={() => setIsExpanded(prev => !prev)}
+            className="w-10 h-8 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center text-[10px] font-semibold shadow cursor-pointer"
+            title={isExpanded ? 'Collapse Map View' : 'Expand Map View'}
+          >
+            {isExpanded ? 'Narrow' : 'Wide'}
+          </button>
+          <button
+            onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 2.6))}
             className="w-8 h-8 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center font-bold text-sm shadow cursor-pointer"
             title="Zoom In"
           >
             +
           </button>
           <button
-            onClick={() => setZoomLevel(prev => Math.max(prev - 0.25, 0.85))}
+            onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.7))}
             className="w-8 h-8 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center font-bold text-sm shadow cursor-pointer"
             title="Zoom Out"
           >

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Radio, AlertTriangle, ShieldAlert, Volume2, VolumeX, Smartphone, Monitor, Info } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Radio, AlertTriangle, ShieldAlert, Volume2, VolumeX, Smartphone, Monitor, Info, Search, MapPin } from 'lucide-react';
 import { City } from '../types/traffic';
 
 interface HeaderBarProps {
@@ -30,6 +30,55 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onToggleDataSaver
 }) => {
   const cities: City[] = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan'];
+  const locationCatalog = useMemo(() => [
+    { city: 'Lagos', label: 'Lekki Phase 1, Lagos' },
+    { city: 'Lagos', label: 'Victoria Island, Lagos' },
+    { city: 'Lagos', label: 'Ikeja GRA, Lagos' },
+    { city: 'Lagos', label: 'Ojota, Lagos' },
+    { city: 'Lagos', label: 'Surulere, Lagos' },
+    { city: 'Lagos', label: 'Berger, Lagos' },
+    { city: 'Abuja', label: 'Wuse, Abuja' },
+    { city: 'Abuja', label: 'Garki, Abuja' },
+    { city: 'Abuja', label: 'Maitama, Abuja' },
+    { city: 'Abuja', label: 'Nyanya, Abuja' },
+    { city: 'Abuja', label: 'Gwarinpa, Abuja' },
+    { city: 'Abuja', label: 'Lugbe, Abuja' },
+    { city: 'Port Harcourt', label: 'GRA, Port Harcourt' },
+    { city: 'Port Harcourt', label: 'Aba Road, Port Harcourt' },
+    { city: 'Port Harcourt', label: 'Trans-Amadi, Port Harcourt' },
+    { city: 'Port Harcourt', label: 'Diobu, Port Harcourt' },
+    { city: 'Port Harcourt', label: 'Rumuola, Port Harcourt' },
+    { city: 'Ibadan', label: 'UI, Ibadan' },
+    { city: 'Ibadan', label: 'Bodija, Ibadan' },
+    { city: 'Ibadan', label: 'Challenge, Ibadan' },
+    { city: 'Ibadan', label: 'Iwo Road, Ibadan' },
+    { city: 'Ibadan', label: 'Ring Road, Ibadan' },
+  ], []);
+  const [query, setQuery] = useState('');
+  const filteredLocations = query.trim()
+    ? locationCatalog.filter(item =>
+        item.label.toLowerCase().includes(query.trim().toLowerCase()) ||
+        item.city.toLowerCase().includes(query.trim().toLowerCase())
+      )
+    : [];
+
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmed = query.trim();
+    if (!trimmed) return;
+
+    const directMatch = locationCatalog.find(item =>
+      item.label.toLowerCase() === trimmed.toLowerCase() ||
+      item.city.toLowerCase() === trimmed.toLowerCase()
+    ) || filteredLocations[0];
+
+    if (directMatch) {
+      setSelectedCity(directMatch.city as City);
+      setActiveTab('map');
+    }
+
+    setQuery('');
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-3 md:px-6 py-2.5">
@@ -87,6 +136,39 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
         {/* Zone 3: Actions & Controls */}
         <div className="flex items-center gap-2">
+          <form onSubmit={handleSearchSubmit} className="relative hidden xl:block">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/90 px-2.5 py-1.5 text-xs text-slate-300 shadow-sm focus-within:border-emerald-500 min-w-[220px]">
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search address / state"
+                className="w-full bg-transparent text-slate-200 placeholder:text-slate-500 focus:outline-none"
+                aria-label="Search address in Lagos, Abuja, Port Harcourt, or Ibadan"
+              />
+            </div>
+
+            {filteredLocations.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-slate-700 bg-slate-900/95 shadow-2xl overflow-hidden">
+                {filteredLocations.slice(0, 5).map((location) => (
+                  <button
+                    key={`${location.city}-${location.label}`}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCity(location.city as City);
+                      setActiveTab('map');
+                      setQuery('');
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-slate-200 hover:bg-slate-800 transition-colors"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{location.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </form>
+
           {/* City Selector */}
           <select 
             aria-label="Select City"
